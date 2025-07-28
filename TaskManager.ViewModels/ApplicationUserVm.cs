@@ -17,7 +17,7 @@ namespace TaskManager.ViewModels
         public string? PhoneNumber { get; set; }
         //[RegularExpression(@"[a-z0-9-_]+$", ErrorMessage = "Invalid User name (a to z _ - )")]
         public string? UserName { get; set; }
-        public string Password { get; set; }
+        public string? Password { get; set; }
         [RegularExpression(@"[a-zA-Z-_ ]+$", ErrorMessage = "Invalid Name")]
         public string FullName { get; set; }
         public string? Address { get; set; }

@@ -7,7 +7,7 @@ using MySql.EntityFrameworkCore.Metadata;
 namespace TaskManager.API.Migrations
 {
     /// <inheritdoc />
-    public partial class initCreate : Migration
+    public partial class init : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -35,6 +35,9 @@ namespace TaskManager.API.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "varchar(255)", nullable: false),
+                    Discriminator = table.Column<string>(type: "varchar(21)", maxLength: 21, nullable: false),
+                    FullName = table.Column<string>(type: "NVARCHAR(35)", nullable: true),
+                    Address = table.Column<string>(type: "VARCHAR(100)", nullable: true),
                     UserName = table.Column<string>(type: "varchar(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "varchar(256)", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "varchar(256)", maxLength: 256, nullable: true),

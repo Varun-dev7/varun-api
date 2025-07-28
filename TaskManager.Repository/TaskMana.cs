@@ -8,137 +8,190 @@ using TaskManager.Model;
 using TaskManager.Repository.Services;
 using TaskManager.ViewModel;
 using TaskManager.ViewModels.Enum;
+using TaskManager.ViewModels.Results;
 
 namespace TaskManager.Repository
 {
-    public class TaskMana: ITaskManager
+    public class TaskMana : ITaskManager
     {
         private ApplicationDbContext _context;
         public TaskMana(ApplicationDbContext context)
         {
             _context = context;
         }
-        public List<TaskManagerVm> Get()
+        public async Task<RTaskManagerList> Get()
         {
+            RTaskManagerList res = new RTaskManagerList();
             try
             {
                 List<TaskManagerVm> reslist = new List<TaskManagerVm>();
                 var list = _context.taskManagers.ToList();
-                foreach(var item in list)
+                if (list != null)
                 {
-                    reslist.Add(new TaskManagerVm
+                    foreach (var item in list)
                     {
-                        Id = item.Id,
-                        Title = item.Title,
-                        Desciption = item.Desciption,
-                        IsCompleted = item.IsCompleted,
-                    });
+                        reslist.Add(new TaskManagerVm
+                        {
+                            Id = item.Id,
+                            Title = item.Title,
+                            Desciption = item.Desciption,
+                            IsCompleted = item.IsCompleted,
+                        });
+                        res.Data = reslist;
+                        res.Result = new ApiResult { Success = true, Code = EMessageCode.Ok, Message = "Succeded" };
+                    }
                 }
-                return reslist;
+                else
+                {
+                    res.Data = null;
+                    res.Result = new ApiResult { Success = false, Code = EMessageCode.NotFound, Message = "No data found" };
+                }
             }
             catch (Exception ex)
             {
-                return null;
+                res.Data = null;
+                res.Result = new ApiResult { Success = false, Code = EMessageCode.InternalServerError, Message = ex.Message };
             }
+            return res;
         }
-        public List<TaskManagerVm> Gett(EBool status)
+        public async Task<RTaskManagerList> Gett(EBool status)
         {
+            RTaskManagerList res = new RTaskManagerList();
             try
             {
                 List<TaskManagerVm> reslist = new List<TaskManagerVm>();
                 var list = _context.taskManagers.Where(e => e.IsCompleted == status).ToList();
-                foreach (var item in list)
+
+                if (list != null)
                 {
-                    reslist.Add(new TaskManagerVm
+                    foreach (var item in list)
                     {
-                        Id = item.Id,
-                        Title = item.Title,
-                        Desciption = item.Desciption,
-                        IsCompleted = item.IsCompleted,
-                    });
+                        reslist.Add(new TaskManagerVm
+                        {
+                            Id = item.Id,
+                            Title = item.Title,
+                            Desciption = item.Desciption,
+                            IsCompleted = item.IsCompleted,
+                        });
+                        res.Data = reslist;
+                        res.Result = new ApiResult { Success = true, Code = EMessageCode.Ok, Message = "Succeded" };
+                    }
                 }
-                return reslist;
+                else
+                {
+                    res.Data = null;
+                    res.Result = new ApiResult { Success = false, Code = EMessageCode.NotFound, Message = "No data found" };
+                }
             }
             catch (Exception ex)
             {
-                return null;
+                res.Data = null;
+                res.Result = new ApiResult { Success = false, Code = EMessageCode.InternalServerError, Message = ex.Message };
             }
+            return res;
         }
-        public bool Add(TaskManagerVm user)
+        public async Task<RTaskManager> Add(TaskManagerVm task)
         {
+            RTaskManager data = new RTaskManager();
             try
             {
-                TaskM task = new TaskM
+                TaskM dbtask = new TaskM()
                 {
-                    Id = user.Id,
-                    Title=user.Title,
-                    Desciption=user.Desciption,
-                    IsCompleted=user.IsCompleted,
+                    Id = task.Id,
+                    Title = task.Title,
+                    Desciption = task.Desciption,
+                    IsCompleted = task.IsCompleted,
                 };
-                bool flag = false;
-                _context.taskManagers.Add(task);
+                _context.taskManagers.Add(dbtask);
+                var result = _context.SaveChanges();
 
-                var x = _context.SaveChanges();
-                flag = x < 1 ? false: true;
-                return flag;
-            }
-            catch(Exception ex)
-            {
-                return false;
-            }
-        }
-        public string Update(TaskManagerVm user)
-        {
-            try
-            {
-                bool flag = false;
-                var tas = _context.taskManagers.Where(e => e.Id == user.Id).FirstOrDefault();
-
-                if(tas!=null&& user.Id==tas.Id)
+                if (result > 0)
                 {
-                    tas.Id = user.Id;
-                    tas.Title = user.Title;
-                    tas.Desciption = user.Desciption;
-                    tas.IsCompleted = user.IsCompleted;
-
-                    _context.taskManagers.Update(tas);
-                    var v = _context.SaveChanges();
-                    flag = v < 1 ? false : true;
-                    return "Saved successfully";
+                    task.Id = task.Id;
+                    data.Data = task;
+                    data.Result = new ApiResult { Success = true, Code = EMessageCode.Ok, Message = "Task added successfully" };
                 }
                 else
                 {
-                    return "Not Found";
-                }
-            }
-            catch(Exception ex)
-            {
-                return ex.Message;
-            }
-        }
-        public string Delete(int Id)
-        {
-            try
-            {
-                bool flag = false;
-                var tas = _context.taskManagers.Where(e => e.Id == Id).FirstOrDefault();
-
-                if (tas != null)
-                {
-                    _context.taskManagers.Remove(tas);
-                    var v = _context.SaveChanges();
-                    flag = v < 1 ? false : true;
-                    return "Saved successfully";
-                }
-                else
-                {
-                    return "Not Found";
+                    data.Data = null;
+                    data.Result = new ApiResult { Success = false, Code = EMessageCode.BadRequest, Message = "Failed to add task" };
                 }
             }
             catch (Exception ex)
             {
-                return ex.Message;
+                data.Data = null;
+                data.Result = new ApiResult { Success = false, Code = EMessageCode.InternalServerError, Message = ex.Message };
             }
+            return data;
+        }
+        public async Task<ApiResult> Update(TaskManagerVm task)
+        {
+            ApiResult data = new ApiResult();
+            try
+            {
+                var result = _context.taskManagers.Find(task.Id);
+
+                if (result != null && task.Id == result.Id)
+                {
+                    result.Id = task.Id;
+                    result.Title = task.Title;
+                    result.Desciption = task.Desciption;
+                    result.IsCompleted = task.IsCompleted;
+
+                    _context.Entry(result).State = EntityState.Modified;
+                    var v = _context.SaveChanges();
+
+                    if (v > 0)
+                    {
+                        data = new ApiResult { Success = true, Code = EMessageCode.Ok, Message = "Task Updated Successfully" };
+                    }
+                    else
+                    {
+                        data = new ApiResult { Success = false, Code = EMessageCode.BadRequest, Message = "Failed" };
+                    }
+                }
+                else
+                {
+                    data = new ApiResult { Success = false, Code = EMessageCode.NotFound, Message = "Task not found" };
+                }
+            }
+            catch (Exception ex)
+            {
+                data = new ApiResult { Success = false, Code = EMessageCode.InternalServerError, Message = ex.Message };
+            }
+            return data;
+        }
+        public async Task<ApiResult> Delete(int Id)
+        {
+            ApiResult data = new ApiResult();
+            try
+            {
+                var result = _context.taskManagers.Find(Id);
+
+                if (result != null)
+                {
+                    _context.taskManagers.Remove(result);
+                    var v = _context.SaveChanges();
+
+                    if (v > 0)
+                    {
+                        data = new ApiResult { Success = true, Code = EMessageCode.Ok, Message = "Task Deleted Successfully" };
+                    }
+                    else
+                    {
+                        data = new ApiResult { Success = false, Code = EMessageCode.BadRequest, Message = "Failed to delete task" };
+                    }
+                }
+                else
+                {
+                    data = new ApiResult { Success = false, Code = EMessageCode.NotFound, Message = "Task not found" };
+                }
+            }
+            catch (Exception ex)
+            {
+                data = new ApiResult { Success = false, Code = EMessageCode.InternalServerError, Message = ex.Message };
+            }
+            return data;
         }
     }
 }

@@ -11,8 +11,8 @@ using TaskManager.Repository;
 namespace TaskManager.API.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250616114335_createApplicationUser")]
-    partial class createApplicationUser
+    [Migration("20250711072602_init")]
+    partial class init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
